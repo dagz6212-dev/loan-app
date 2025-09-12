@@ -10,7 +10,11 @@ let cachedDb = null;
 async function connectToDatabase() {
   if (cachedClient && cachedDb) return { client: cachedClient, db: cachedDb };
 
-  const client = new MongoClient(uri);
+  const client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
   await client.connect();
   const db = client.db(dbName);
 
@@ -26,7 +30,7 @@ module.exports = async (req, res) => {
     const collection = db.collection("borrowers");
 
     if (req.method === "GET") {
-      // Get all borrowers
+      // Return all borrowers sorted by latest first
       const borrowers = await collection.find({}).sort({ createdAt: -1 }).toArray();
       return res.status(200).json(borrowers);
     }
@@ -34,6 +38,7 @@ module.exports = async (req, res) => {
     if (req.method === "POST") {
       const body = req.body;
 
+      // Validate required fields
       if (!body.name || !body.contact || !body.address) {
         return res.status(400).json({ message: "Missing required borrower fields." });
       }
@@ -52,7 +57,7 @@ module.exports = async (req, res) => {
       };
 
       const result = await collection.insertOne(borrower);
-      return res.status(201).json({ insertedId: result.insertedId });
+      return res.status(201).json({ _id: result.insertedId, ...borrower });
     }
 
     if (req.method === "DELETE") {
@@ -72,7 +77,7 @@ module.exports = async (req, res) => {
     }
 
     res.setHeader("Allow", ["GET", "POST", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   } catch (err) {
     console.error("API error:", err);
     return res.status(500).json({ message: "Internal Server Error" });
