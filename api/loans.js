@@ -1,49 +1,80 @@
 // api/loans.js
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require("mongodb");
 
-const uri = process.env.MONGODB_URI;      // set this in Vercel env (see below)
-const dbName = process.env.MONGODB_DB || 'loanapp';
+const uri = process.env.MONGODB_URI;
+const dbName = process.env.MONGODB_DB || "loanapp";
+
 let cachedClient = null;
 let cachedDb = null;
 
+async function connectToDatabase() {
+  if (cachedClient && cachedDb) return { client: cachedClient, db: cachedDb };
+
+  const client = new MongoClient(uri);
+  await client.connect();
+  const db = client.db(dbName);
+
+  cachedClient = client;
+  cachedDb = db;
+
+  return { client, db };
+}
+
 module.exports = async (req, res) => {
-  if (!uri) {
-    return res.status(500).json({ error: 'MONGODB_URI not configured' });
-  }
+  try {
+    const { db } = await connectToDatabase();
+    const collection = db.collection("borrowers");
 
-  // lazy init + cache client across invocations
-  if (!cachedClient) {
-    const client = new MongoClient(uri);
-    await client.connect();
-    cachedClient = client;
-    cachedDb = client.db(dbName);
-  }
-
-  const collection = cachedDb.collection('loans');
-
-  // GET -> list loans
-  if (req.method === 'GET') {
-    const docs = await collection.find({}).sort({ createdAt: -1 }).limit(200).toArray();
-    return res.status(200).json(docs);
-  }
-
-  // POST -> create a loan record
-  if (req.method === 'POST') {
-    // Ensure body parsed as JSON (Vercel usually provides parsed body for application/json)
-    const body = req.body;
-    if (!body || !body.name || !body.amount) {
-      return res.status(400).json({ error: 'Missing name or amount' });
+    if (req.method === "GET") {
+      // Get all borrowers
+      const borrowers = await collection.find({}).sort({ createdAt: -1 }).toArray();
+      return res.status(200).json(borrowers);
     }
-    const doc = {
-      name: String(body.name),
-      amount: Number(body.amount),
-      term: body.term || null,
-      createdAt: new Date()
-    };
-    const r = await collection.insertOne(doc);
-    return res.status(201).json({ insertedId: r.insertedId });
-  }
 
-  res.setHeader('Allow', 'GET, POST');
-  return res.status(405).end('Method Not Allowed');
+    if (req.method === "POST") {
+      const body = req.body;
+
+      if (!body.name || !body.contact || !body.address) {
+        return res.status(400).json({ message: "Missing required borrower fields." });
+      }
+
+      const borrower = {
+        name: body.name,
+        contact: body.contact,
+        address: body.address,
+        loanAmount: Number(body.loanAmount) || 0,
+        term: Number(body.term) || 0,
+        interestRate: Number(body.interestRate) || 0,
+        interestType: body.interestType || "monthly",
+        nextDueDate: body.nextDueDate ? new Date(body.nextDueDate) : null,
+        monthlyPayment: Number(body.monthlyPayment) || 0,
+        createdAt: new Date(),
+      };
+
+      const result = await collection.insertOne(borrower);
+      return res.status(201).json({ insertedId: result.insertedId });
+    }
+
+    if (req.method === "DELETE") {
+      const { id } = req.query;
+
+      if (!id) {
+        return res.status(400).json({ message: "Missing borrower id." });
+      }
+
+      const result = await collection.deleteOne({ _id: new ObjectId(id) });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: "Borrower not found." });
+      }
+
+      return res.status(200).json({ message: "Borrower deleted successfully." });
+    }
+
+    res.setHeader("Allow", ["GET", "POST", "DELETE"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  } catch (err) {
+    console.error("API error:", err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 };
