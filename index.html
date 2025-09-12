@@ -1,75 +1,1288 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Simple Loan App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LoanTrack - Dashboard</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
   <style>
-    body { font-family: system-ui, Arial; padding: 1rem; max-width: 720px; margin: auto; }
-    label { display:block; margin-top: .5rem; }
-    input { padding:.4rem; width:100%; box-sizing:border-box }
-    button { margin-top: .6rem; padding:.6rem 1rem; }
-    li { margin: .4rem 0; }
+    /* General styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 0 15px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4e54c8, #8a64d6);
+      color: white;
+      padding: 15px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1100;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo i {
+      margin-right: 10px;
+    }
+
+    /* Top navigation styles */
+    .top-nav {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 60px; /* height of header */
+      z-index: 1050;
+    }
+
+    .top-nav .container {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+    }
+
+    .top-nav .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #777;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 5px 10px;
+      user-select: none;
+      transition: color 0.3s;
+    }
+
+    .top-nav .nav-item:hover {
+      color: #6a6ae6;
+    }
+
+    .top-nav .nav-item.active {
+      color: #4e54c8;
+      font-weight: 600;
+    }
+
+    .top-nav .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 3px;
+    }
+
+    /* Dashboard stats */
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 8px;
+      flex: 1;
+      min-width: 130px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    .stat-card h3 {
+      font-size: 1.8rem;
+      color: #4e54c8;
+      margin-bottom: 5px;
+    }
+
+    .stat-card p {
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    /* Tabs inside Loans page */
+    .tabs {
+      display: flex;
+      background: white;
+      border-radius: 12px;
+      margin: 20px 0;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 15px;
+      font-weight: 600;
+      color: #777;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tab.active {
+      color: #4e54c8;
+      border-bottom: 3px solid #4e54c8;
+    }
+
+    .content-section {
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Borrower card */
+    .borrower-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .borrower-info h3 {
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+    }
+
+    .borrower-info p {
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    .loan-amount {
+      font-weight: bold;
+      color: #4e54c8;
+    }
+
+    .status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 15px;
+      white-space: nowrap;
+    }
+
+    .status.good {
+      background: #e6f7ee;
+      color: #2ecc71;
+    }
+
+    .status.warning {
+      background: #fef5e7;
+      color: #f39c12;
+    }
+
+    .status.bad {
+      background: #fee;
+      color: #e74c3c;
+    }
+
+    /* Loan item */
+    .loan-item {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .loan-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .loan-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .detail-item {
+      font-size: 0.9rem;
+    }
+
+    .detail-item .label {
+      color: #777;
+    }
+
+    .detail-item .value {
+      font-weight: 600;
+      color: #444;
+    }
+
+    /* Overdue item */
+    .overdue-item {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+      border-left: 4px solid #e74c3c;
+    }
+
+    .overdue-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .overdue-days {
+      background: #fee;
+      color: #e74c3c;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .btn {
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-size: 0.9rem;
+      user-select: none;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #4e54c8;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #3b3f9a;
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #777;
+    }
+
+    .btn-secondary:hover {
+      background: #ddd;
+    }
+
+    .btn-success {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #27ae60;
+    }
+
+    /* Delete button */
+    .btn-delete {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      align-self: center;
+      margin-left: 15px;
+      height: 30px;
+      white-space: nowrap;
+    }
+
+    .btn-delete:hover {
+      background: #c0392b;
+    }
+
+    /* Section title */
+    .section-title {
+      margin: 20px 0 15px;
+      font-size: 1.2rem;
+      color: #444;
+    }
+
+    /* Hide all main pages by default */
+    .page {
+      display: none;
+      padding-top: 70px; /* space for top nav */
+      padding-bottom: 80px; /* space for add button */
+    }
+
+    /* Show active page */
+    .page.active {
+      display: block;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-header h2 {
+      color: #4e54c8;
+      margin: 0;
+    }
+
+    .close-button {
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #777;
+    }
+
+    .close-button:hover {
+      color: #333;
+    }
+
+    /* Form styles */
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="date"],
+    .form-group input[type="tel"],
+    .form-group input[type="file"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #4e54c8;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    /* Calculation results */
+    .calculation-results {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      border-left: 4px solid #4e54c8;
+    }
+
+    .calculation-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .calculation-item:last-child {
+      margin-bottom: 0;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-top: 1px solid #ddd;
+      padding-top: 8px;
+    }
+
+    /* Loading and error messages */
+    .loading-indicator, .error-message {
+      text-align: center;
+      padding: 15px;
+      color: #4e54c8;
+      font-weight: 600;
+    }
+    .error-message {
+      color: #e74c3c;
+    }
+
+    /* Add Borrower button */
+    .add-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #4e54c8, #8a64d6);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5);
+      z-index: 100;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* File upload preview */
+    .file-upload-preview {
+      width: 100px;
+      height: 100px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .file-upload-preview img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      
+      .form-row .form-group {
+        margin-bottom: 15px;
+      }
+      
+      .modal-content {
+        width: 95%;
+        margin: 20px auto;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Loan App (Demo)</h1>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">
+          <i class="fas fa-hand-holding-usd"></i>
+          <span>LoanTrack</span>
+        </div>
+        <div class="user">
+          <i class="fas fa-user-circle fa-lg"></i>
+        </div>
+      </div>
+    </div>
+  </header>
 
-  <form id="loanForm">
-    <label>
-      Name
-      <input name="name" required />
-    </label>
-    <label>
-      Amount
-      <input name="amount" type="number" required />
-    </label>
-    <label>
-      Term (optional)
-      <input name="term" />
-    </label>
-    <button type="submit">Create Loan</button>
-  </form>
+  <!-- Navigation panel -->
+  <div class="top-nav">
+    <div class="container">
+      <div class="nav-item active" data-page="home">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </div>
+      <div class="nav-item" data-page="loans">
+        <i class="fas fa-list"></i>
+        <span>Loans</span>
+      </div>
+      <div class="nav-item" data-page="reports">
+        <i class="fas fa-chart-pie"></i>
+        <span>Reports</span>
+      </div>
+      <div class="nav-item" data-page="settings">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </div>
+    </div>
+  </div>
 
-  <h2>Loans</h2>
-  <ul id="loansList"></ul>
+  <div class="container">
+    <!-- Home Page -->
+    <div id="page-home" class="page active">
+      <div class="stats">
+        <div class="stat-card">
+          <h3 id="totalLoans">Php 0</h3>
+          <p>Total Loans</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="totalBorrowers">0</h3>
+          <p>Borrowers</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="totalDueThisWeek">Php 0</h3>
+          <p>Due This Week</p>
+        </div>
+      </div>
+      <p style="text-align:center; color:#777; margin-top: 40px;">
+        Welcome to LoanTrack! Use the navigation above to manage loans and borrowers.
+      </p>
+    </div>
+
+    <!-- Loans Page -->
+    <div id="page-loans" class="page">
+      <div class="tabs" id="loansTabs">
+        <div class="tab active" data-tab="allBorrowers">All Borrowers</div>
+        <div class="tab" data-tab="activeLoans">Active Loans</div>
+        <div class="tab" data-tab="overdueLoans">Overdue</div>
+      </div>
+
+      <div id="allBorrowers" class="content-section active">
+        <h2 class="section-title">All Borrowers</h2>
+        <div id="allBorrowersList" class="borrower-list"></div>
+        <div id="allBorrowersLoading" class="loading-indicator">Loading borrowers...</div>
+        <div id="allBorrowersError" class="error-message" style="display:none;">Failed to load borrowers.</div>
+      </div>
+
+      <div id="activeLoans" class="content-section">
+        <h2 class="section-title">Active Loans</h2>
+        <div id="activeLoansList" class="borrower-list"></div>
+        <div id="activeLoansLoading" class="loading-indicator">Loading active loans...</div>
+        <div id="activeLoansError" class="error-message" style="display:none;">Failed to load active loans.</div>
+      </div>
+
+            <div id="overdueLoans" class="content-section">
+        <h2 class="section-title">Overdue Payments</h2>
+        <div id="overdueLoansList" class="borrower-list"></div>
+        <div id="overdueLoansLoading" class="loading-indicator">Loading overdue loans...</div>
+        <div id="overdueLoansError" class="error-message" style="display:none;">Failed to load overdue loans.</div>
+      </div>
+    </div>
+
+    <!-- Reports Page -->
+    <div id="page-reports" class="page">
+      <h2 class="section-title">Reports</h2>
+      <div style="text-align:center; margin-top: 30px;">
+        <button id="generateReportBtn" class="btn btn-primary" style="padding: 12px 25px; font-size: 1rem;">
+          Generate Sample Report
+        </button>
+      </div>
+      <p style="color:#777; text-align:center; margin-top: 40px;">
+        Reports page coming soon.
+      </p>
+    </div>
+
+    <!-- Settings Page -->
+    <div id="page-settings" class="page">
+      <h2 class="section-title">Settings</h2>
+      <p style="color:#777; text-align:center; margin-top: 40px;">
+        Settings page coming soon.
+      </p>
+    </div>
+  </div>
+
+  <!-- Add Borrower Floating Button (only visible on Home page) -->
+  <div class="add-btn" id="addBorrowerBtn" title="Add Borrower">
+    <i class="fas fa-plus"></i>
+  </div>
+
+  <!-- Add Borrower Modal -->
+  <div id="addBorrowerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Borrower</h2>
+        <span class="close-button" id="closeModalBtn">&times;</span>
+      </div>
+      
+      <form id="addBorrowerForm">
+        <div class="form-group">
+          <label for="borrowerName">Full Name *</label>
+          <input type="text" id="borrowerName" name="name" required placeholder="Enter full name" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="borrowerContact">Contact Number *</label>
+            <input type="tel" id="borrowerContact" name="contact" required placeholder="+1 (555) 123-4567" />
+          </div>
+          <div class="form-group">
+            <label for="borrowerIdPicture">ID Picture (Optional)</label>
+            <input type="file" id="borrowerIdPicture" name="idPicture" accept="image/*" />
+            <div class="file-upload-preview" id="idPicturePreview">
+              <i class="fas fa-camera" style="color: #777;"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="borrowerAddress">Address *</label>
+          <textarea id="borrowerAddress" name="address" required placeholder="Enter complete address" rows="3"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="loanAmount">Loan Amount (Php) *</label>
+            <input type="number" id="loanAmount" name="loanAmount" required min="0" step="1" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label for="loanTerm">Loan Term (Months) *</label>
+            <input type="number" id="loanTerm" name="term" required min="1" placeholder="12" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="interestRate">Interest Rate (%) *</label>
+            <input type="number" id="interestRate" name="interestRate" required min="0" step="0.01" placeholder="5.0" />
+          </div>
+          <div class="form-group">
+            <label for="interestType">Interest Type *</label>
+            <select id="interestType" name="interestType" required>
+              <option value="monthly">Monthly</option>
+              <option value="annually">Annually</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="nextDueDate">Next Due Date *</label>
+          <input type="date" id="nextDueDate" name="nextDueDate" required />
+        </div>
+
+        <!-- Calculation Results -->
+        <div class="calculation-results" id="calculationResults" style="display: none;">
+          <h4 style="margin-bottom: 15px; color: #4e54c8;">Loan Calculation</h4>
+          <div class="calculation-item">
+            <span>Principal Amount:</span>
+            <span id="calcPrincipal">Php 0</span>
+          </div>
+          <div class="calculation-item">
+            <span>Total Interest:</span>
+            <span id="calcTotalInterest">Php 0</span>
+          </div>
+          <div class="calculation-item">
+            <span>Total Payable:</span>
+            <span id="calcTotalPayable">Php 0</span>
+          </div>
+          <div class="calculation-item">
+            <span>Monthly Payment:</span>
+            <span id="calcMonthlyPayment">Php 0</span>
+          </div>
+        </div>
+
+        <div class="form-actions" style="display: flex; justify-content: space-between; margin-top: 20px;">
+          <button type="button" id="calculateLoanBtn" class="btn btn-secondary">Calculate</button>
+          <div>
+            <button type="button" id="cancelAddBorrower" class="btn btn-secondary" style="margin-right: 10px;">Cancel</button>
+            <button type="submit" class="btn btn-success">Submit Borrower</button>
+          </div>
+        </div>
+
+        <div id="addBorrowerError" class="error-message" style="display: none; margin-top: 15px;"></div>
+      </form>
+    </div>
+  </div>
 
   <script>
-    async function fetchLoans() {
-      const res = await fetch('/api/loans');
-      const data = await res.json();
-      const list = document.getElementById('loansList');
-      list.innerHTML = '';
-      if (!data || data.length === 0) {
-        list.innerHTML = '<li>No loans yet.</li>';
-        return;
-      }
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.name} — ₱${item.amount} ${item.term ? ' / ' + item.term : ''} (${new Date(item.createdAt).toLocaleString()})`;
-        list.appendChild(li);
-      });
-    }
+    const API_URL = "/api"; // relative path to your own Vercel function
 
-    document.getElementById('loanForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const f = e.target;
-      const payload = {
-        name: f.name.value,
-        amount: Number(f.amount.value),
-        term: f.term.value || null
-      };
-      await fetch('/api/loans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+    // Navigation and page switching
+    const navItems = document.querySelectorAll('.top-nav .nav-item');
+    const pages = document.querySelectorAll('.page');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        const pageToShow = item.getAttribute('data-page');
+        pages.forEach(page => page.classList.remove('active'));
+        document.getElementById('page-' + pageToShow).classList.add('active');
+
+        // Show/hide Add Borrower button only on Home page
+        document.getElementById('addBorrowerBtn').style.display = pageToShow === 'home' ? 'flex' : 'none';
+        
+        // If switching to loans page, load the first tab data
+        if (pageToShow === 'loans') {
+          fetchAllBorrowers();
+        }
       });
-      f.reset();
-      fetchLoans();
     });
 
-    // load on open
-    fetchLoans();
+    // Loans tabs switching
+    const loanTabs = document.querySelectorAll('#loansTabs .tab');
+    const loanSections = document.querySelectorAll('#page-loans .content-section');
+
+    loanTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        loanTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const tabToShow = tab.getAttribute('data-tab');
+        loanSections.forEach(section => section.classList.remove('active'));
+        document.getElementById(tabToShow).classList.add('active');
+
+        // Fetch data for the selected tab
+        if (tabToShow === 'allBorrowers') {
+          fetchAllBorrowers();
+        } else if (tabToShow === 'activeLoans') {
+          fetchActiveLoans();
+        } else if (tabToShow === 'overdueLoans') {
+          fetchOverdueLoans();
+        }
+      });
+    });
+
+    // Elements for stats on Home page
+    const totalLoansStat = document.getElementById('totalLoans');
+    const totalBorrowersStat = document.getElementById('totalBorrowers');
+    const totalDueThisWeekStat = document.getElementById('totalDueThisWeek');
+
+    // Add Borrower modal elements
+    const addBorrowerBtn = document.getElementById('addBorrowerBtn');
+    const addBorrowerModal = document.getElementById('addBorrowerModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelAddBorrower = document.getElementById('cancelAddBorrower');
+    const addBorrowerForm = document.getElementById('addBorrowerForm');
+    const addBorrowerError = document.getElementById('addBorrowerError');
+    const calculateLoanBtn = document.getElementById('calculateLoanBtn');
+    const calculationResults = document.getElementById('calculationResults');
+    const idPictureInput = document.getElementById('borrowerIdPicture');
+    const idPicturePreview = document.getElementById('idPicturePreview');
+
+    // Report button
+    const generateReportBtn = document.getElementById('generateReportBtn');
+
+    // Format currency helper: Php prefix, comma thousands separator, no decimals
+    function formatCurrency(amount) {
+      if (isNaN(amount) || amount === null) return "Php 0";
+      return "Php " + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    // Calculate loan function
+    function calculateLoan() {
+      const loanAmount = parseFloat(document.getElementById('loanAmount').value) || 0;
+      const interestRate = parseFloat(document.getElementById('interestRate').value) || 0;
+      const loanTerm = parseInt(document.getElementById('loanTerm').value) || 0;
+      const interestType = document.getElementById('interestType').value;
+
+      if (loanAmount <= 0 || interestRate < 0 || loanTerm <= 0) { // interestRate can be 0
+        alert('Please enter valid loan details to calculate. Loan amount and term must be greater than 0.');
+        return;
+      }
+
+      // Convert annual rate to monthly if needed
+      let monthlyInterestRate;
+      if (interestType === 'annually') {
+        monthlyInterestRate = interestRate / 12; // Convert annual to monthly
+      } else {
+        monthlyInterestRate = interestRate;
+      }
+
+      // Calculate monthly payment using formula: P * r * (1+r)^n / ((1+r)^n - 1)
+      const monthlyRateDecimal = monthlyInterestRate / 100;
+      let monthlyPayment;
+      let totalInterest;
+      let totalPayable;
+
+      if (monthlyRateDecimal === 0) { // Handle 0% interest
+        monthlyPayment = loanAmount / loanTerm;
+        totalInterest = 0;
+        totalPayable = loanAmount;
+      } else {
+        const numerator = loanAmount * monthlyRateDecimal * Math.pow(1 + monthlyRateDecimal, loanTerm);
+        const denominator = Math.pow(1 + monthlyRateDecimal, loanTerm) - 1;
+        monthlyPayment = numerator / denominator;
+        totalInterest = (monthlyPayment * loanTerm) - loanAmount;
+        totalPayable = loanAmount + totalInterest;
+      }
+
+      // Round values to integers for display
+      monthlyPayment = Math.round(monthlyPayment);
+      totalInterest = Math.round(totalInterest);
+      totalPayable = Math.round(totalPayable);
+
+      // Update calculation results
+      document.getElementById('calcPrincipal').textContent = formatCurrency(loanAmount);
+      document.getElementById('calcTotalInterest').textContent = formatCurrency(totalInterest);
+      document.getElementById('calcTotalPayable').textContent = formatCurrency(totalPayable);
+      document.getElementById('calcMonthlyPayment').textContent = formatCurrency(monthlyPayment);
+
+      calculationResults.style.display = 'block';
+    }
+
+    // Show modal
+    addBorrowerBtn.addEventListener('click', () => {
+      addBorrowerModal.style.display = 'flex';
+      addBorrowerError.style.display = 'none';
+      addBorrowerForm.reset();
+      calculationResults.style.display = 'none';
+      idPicturePreview.innerHTML = '<i class="fas fa-camera" style="color: #777;"></i>';
+      
+      // Set today's date as default for next due date
+      const today = new Date();
+      const nextMonth = new Date(today);
+      nextMonth.setMonth(today.getMonth() + 1);
+      document.getElementById('nextDueDate').value = nextMonth.toISOString().split('T')[0];
+    });
+
+    // Close modal
+    closeModalBtn.addEventListener('click', () => {
+      addBorrowerModal.style.display = 'none';
+    });
+    cancelAddBorrower.addEventListener('click', () => {
+      addBorrowerModal.style.display = 'none';
+    });
+
+    // Close modal on outside click
+    window.addEventListener('click', (e) => {
+      if (e.target === addBorrowerModal) {
+        addBorrowerModal.style.display = 'none';
+      }
+    });
+
+    // Calculate button click
+    calculateLoanBtn.addEventListener('click', calculateLoan);
+
+    // ID picture preview
+    idPictureInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          idPicturePreview.innerHTML = `<img src="${e.target.result}" alt="ID Preview">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Add borrower form submit
+    addBorrowerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      addBorrowerError.style.display = 'none';
+
+      const formData = new FormData(addBorrowerForm);
+      const borrowerData = {
+        name: formData.get('name'),
+        contact: formData.get('contact'),
+        address: formData.get('address'),
+        loanAmount: parseInt(formData.get('loanAmount')),
+        term: parseInt(formData.get('term')),
+        interestRate: parseFloat(formData.get('interestRate')),
+        interestType: formData.get('interestType'),
+        nextDueDate: formData.get('nextDueDate'),
+        monthlyPayment: parseInt(document.getElementById('calcMonthlyPayment').textContent.replace(/[^0-9]/g, '')) || 0
+      };
+
+      // Basic validation
+      if (!borrowerData.name || !borrowerData.contact || !borrowerData.address || 
+          borrowerData.loanAmount <= 0 || borrowerData.term <= 0 || borrowerData.interestRate < 0) { // interestRate can be 0
+        addBorrowerError.textContent = 'Please fill all required fields with valid values.';
+        addBorrowerError.style.display = 'block';
+        return;
+      }
+
+      if (borrowerData.monthlyPayment <= 0) {
+        addBorrowerError.textContent = 'Please calculate the loan first to get monthly payment.';
+        addBorrowerError.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/borrowers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(borrowerData),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Failed to add borrower');
+        }
+
+        // Success: close modal and update stats
+        addBorrowerModal.style.display = 'none';
+        addBorrowerForm.reset();
+        alert('Borrower added successfully!');
+        fetchAndUpdateStats();
+        fetchAndUpdateLoansData();
+
+      } catch (err) {
+        addBorrowerError.textContent = err.message;
+        addBorrowerError.style.display = 'block';
+      }
+    });
+
+    // Generate sample report
+    generateReportBtn.addEventListener('click', async () => {
+      try {
+        generateReportBtn.textContent = 'Generating...';
+        generateReportBtn.disabled = true;
+        
+        const res = await fetch(`${API_URL}/borrowers`);
+        if (!res.ok) throw new Error('Failed to fetch data for report');
+        
+        const borrowers = await res.json();
+        const totalAmount = borrowers.reduce((sum, b) => sum + (b.loanAmount || 0), 0);
+        
+        alert(`Sample Report Generated!\n\nTotal Borrowers: ${borrowers.length}\nTotal Loan Amount: ${formatCurrency(totalAmount)}\n\nReport functionality will be expanded soon.`);
+        
+      } catch (err) {
+        alert('Failed to generate report: ' + err.message);
+      } finally {
+        generateReportBtn.textContent = 'Generate Sample Report';
+        generateReportBtn.disabled = false;
+      }
+    });
+
+    // Fetch and update total loans and borrowers on Home page
+    async function fetchAndUpdateStats() {
+      try {
+        const res = await fetch(`${API_URL}/borrowers`);
+        if (!res.ok) throw new Error('Failed to fetch borrowers');
+        
+        const borrowers = await res.json();
+        const totalLoans = borrowers.reduce((sum, b) => sum + (b.loanAmount || 0), 0);
+        
+        totalLoansStat.textContent = formatCurrency(totalLoans);
+        totalBorrowersStat.textContent = borrowers.length;
+
+        // Calculate total due this week (simulated)
+        const thisWeekTotal = borrowers.reduce((sum, b) => {
+          if (b.loanAmount > 0 && b.monthlyPayment) {
+            return sum + b.monthlyPayment;
+          }
+          return sum;
+        }, 0);
+        totalDueThisWeekStat.textContent = formatCurrency(thisWeekTotal);
+
+      } catch (err) {
+        totalLoansStat.textContent = 'Php 0';
+        totalBorrowersStat.textContent = '0';
+        totalDueThisWeekStat.textContent = 'Php 0';
+      }
+    }
+
+    // Fetch all borrowers for All Borrowers tab
+    async function fetchAllBorrowers() {
+      const list = document.getElementById('allBorrowersList');
+      const loading = document.getElementById('allBorrowersLoading');
+      const error = document.getElementById('allBorrowersError');
+      
+      list.innerHTML = '';
+      error.style.display = 'none';
+      loading.style.display = 'block';
+
+      try {
+        const res = await fetch(`${API_URL}/borrowers`);
+        if (!res.ok) throw new Error('Failed to fetch borrowers');
+        
+        const borrowers = await res.json();
+                loading.style.display = 'none';
+
+        if (borrowers.length === 0) {
+          list.innerHTML = '<p style="text-align:center; color:#777; padding:20px;">No borrowers found.</p>';
+          return;
+        }
+
+        borrowers.forEach(borrower => {
+          const card = document.createElement('div');
+          card.classList.add('borrower-card');
+
+          // Determine status based on loanAmount
+          const statusClass = borrower.loanAmount > 0 ? 'good' : 'warning';
+          const statusText = borrower.loanAmount > 0 ? 'Active Loan' : 'No Active Loan';
+
+          card.innerHTML = `
+            <div class="borrower-info">
+              <h3>${borrower.name}</h3>
+              <p>Contact: ${borrower.contact || 'N/A'}</p>
+              <p>Loan Amount: <span class="loan-amount">${formatCurrency(borrower.loanAmount || 0)}</span></p>
+              <p style="font-size:0.8rem; color:#999;">Added: ${new Date(borrower.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div class="status ${statusClass}">
+              ${statusText}
+            </div>
+            <button class="btn btn-delete" data-id="${borrower.id}">Delete</button>
+          `;
+
+          list.appendChild(card);
+        });
+
+        // Attach delete event listeners
+        document.querySelectorAll('.btn-delete').forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const borrowerId = e.target.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this borrower? This action cannot be undone.')) {
+              try {
+                const res = await fetch(`${API_URL}/borrowers/${borrowerId}`, {
+                  method: 'DELETE',
+                });
+                if (!res.ok) {
+                  const errorData = await res.json();
+                  throw new Error(errorData.message || 'Failed to delete borrower');
+                }
+                alert('Borrower deleted successfully.');
+                fetchAllBorrowers(); // Refresh the list
+                fetchAndUpdateStats(); // Update stats on Home page
+              } catch (err) {
+                alert('Error deleting borrower: ' + err.message);
+              }
+            }
+          });
+        });
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // Fetch active loans (borrowers with loanAmount > 0)
+    async function fetchActiveLoans() {
+      const list = document.getElementById('activeLoansList');
+      const loading = document.getElementById('activeLoansLoading');
+      const error = document.getElementById('activeLoansError');
+      
+      list.innerHTML = '';
+      error.style.display = 'none';
+      loading.style.display = 'block';
+
+      try {
+        const res = await fetch(`${API_URL}/borrowers`);
+        if (!res.ok) throw new Error('Failed to fetch borrowers');
+        
+        const borrowers = await res.json();
+        const activeBorrowers = borrowers.filter(b => b.loanAmount > 0);
+        loading.style.display = 'none';
+
+        if (activeBorrowers.length === 0) {
+          list.innerHTML = '<p style="text-align:center; color:#777; padding:20px;">No active loans found.</p>';
+          return;
+        }
+
+        activeBorrowers.forEach(borrower => {
+          const card = document.createElement('div');
+          card.classList.add('loan-item');
+          card.innerHTML = `
+            <div class="loan-header">
+              <h3>${borrower.name}'s Loan</h3>
+              <div class="status good">Active</div>
+            </div>
+            <div class="loan-details">
+              <div class="detail-item">
+                <div class="label">Amount</div>
+                <div class="value">${formatCurrency(borrower.loanAmount || 0)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Interest Rate</div>
+                <div class="value">${(borrower.interestRate || 0)}% ${borrower.interestType || ''}</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Term</div>
+                <div class="value">${borrower.term || 0} months</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Monthly Payment</div>
+                <div class="value">${formatCurrency(borrower.monthlyPayment || 0)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Next Due</div>
+                <div class="value">${borrower.nextDueDate ? new Date(borrower.nextDueDate).toLocaleDateString() : 'N/A'}</div>
+              </div>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // Fetch overdue loans (simulated)
+    async function fetchOverdueLoans() {
+      const list = document.getElementById('overdueLoansList');
+      const loading = document.getElementById('overdueLoansLoading');
+      const error = document.getElementById('overdueLoansError');
+      
+      list.innerHTML = '';
+      error.style.display = 'none'; 
+      loading.style.display = 'block';
+      try {
+        const res = await fetch(`${API_URL}/borrowers`);
+        if (!res.ok) throw new Error('Failed to fetch borrowers');
+        
+        const borrowers = await res.json();
+        const today = new Date();
+        today.setHours(0,0,0,0); // Normalize today's date to compare only date part
+
+        const overdueBorrowers = borrowers.filter(b => {
+          if (b.loanAmount > 0 && b.nextDueDate) {
+            const dueDate = new Date(b.nextDueDate);
+            dueDate.setHours(0,0,0,0);
+            return dueDate < today;
+          }
+          return false;
+        });
+        loading.style.display = 'none';
+
+        if (overdueBorrowers.length === 0) {
+          list.innerHTML = '<p style="text-align:center; color:#777; padding:20px;">No overdue loans found.</p>';
+          return;
+        }
+
+        overdueBorrowers.forEach(borrower => {
+          const dueDate = new Date(borrower.nextDueDate);
+          const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+          
+          const card = document.createElement('div');
+          card.classList.add('overdue-item');
+          card.innerHTML = `
+            <div class="overdue-header">
+              <h3>${borrower.name}'s Loan</h3>
+              <div class="overdue-days">${daysOverdue} days overdue</div>
+            </div>
+            <div class="loan-details">
+              <div class="detail-item">
+                <div class="label">Amount</div>
+                <div class="value">${formatCurrency(borrower.loanAmount || 0)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Interest Rate</div>
+                <div class="value">${(borrower.interestRate || 0)}% ${borrower.interestType || ''}</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Term</div>
+                <div class="value">${borrower.term || 0} months</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Monthly Payment</div>
+                <div class="value">${formatCurrency(borrower.monthlyPayment || 0)}</div>
+              </div>
+              <div class="detail-item">
+                <div class="label">Next Due</div>
+                <div class="value">${dueDate.toLocaleDateString()}</div>
+              </div>
+            </div>
+            <div class="action-buttons">
+              <button class="btn btn-primary" onclick="alert('Send Reminder to ${borrower.name}')">Send Reminder</button>
+              <button class="btn btn-secondary" onclick="alert('Mark payment as received for ${borrower.name}')">Mark as Paid</button>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // Fetch stats and loans data on initial load
+    fetchAndUpdateStats();
+    function fetchAndUpdateLoansData() {
+      const activeTab = document.querySelector('#loansTabs .tab.active').getAttribute('data-tab');
+      if (activeTab === 'allBorrowers') {
+        fetchAllBorrowers();
+      } else if (activeTab === 'activeLoans') {
+        fetchActiveLoans();
+      } else if (activeTab === 'overdueLoans') {
+        fetchOverdueLoans();
+      }
+    }
   </script>
 </body>
 </html>
