@@ -621,19 +621,19 @@
     <!-- Loans Page -->
     <div id="page-loans" class="page">
       <div class="tabs" id="loansTabs">
-        <div class="tab active" data-tab="activeLoans">Active Loans</div>
-        <div class="tab" data-tab="allBorrowers">All Borrowers</div>
+        <div class="tab active" data-tab="allBorrowers">All Borrowers</div>
+        <div class="tab" data-tab="activeLoans">Active Loans</div>
         <div class="tab" data-tab="overdueLoans">Overdue</div>
       </div>
 
-      <div id="allBorrowers" class="content-section">
+      <div id="allBorrowers" class="content-section active">
         <h2 class="section-title">All Borrowers</h2>
         <div id="allBorrowersList" class="borrower-list"></div>
         <div id="allBorrowersLoading" class="loading-indicator">Loading borrowers...</div>
         <div id="allBorrowersError" class="error-message" style="display:none;">Failed to load borrowers.</div>
       </div>
 
-      <div id="activeLoans" class="content-section active">
+      <div id="activeLoans" class="content-section">
         <h2 class="section-title">Active Loans</h2>
         <div id="activeLoansList" class="borrower-list"></div>
         <div id="activeLoansLoading" class="loading-indicator">Loading active loans...</div>
@@ -813,9 +813,9 @@
 
         // Fetch data for the selected tab
         if (tabToShow === 'allBorrowers') {
-          fetchActiveLoans();   // now shows all borrowers
+          fetchAllBorrowers();
         } else if (tabToShow === 'activeLoans') {
-          fetchAllBorrowers();  // now shows only active loans
+          fetchActiveLoans();
         } else if (tabToShow === 'overdueLoans') {
           fetchOverdueLoans();
         }
@@ -1078,27 +1078,66 @@
           const card = document.createElement('div');
           card.classList.add('borrower-card');
 
-          // Determine status based on loanAmount
-          const statusClass = borrower.loanAmount > 0 ? 'good' : 'warning';
-          const statusText = borrower.loanAmount > 0 ? 'Active Loan' : 'No Active Loan';
+          const lastPayment = (borrower.payments && borrower.payments.length > 0)
+            ? borrower.payments[borrower.payments.length - 1]
+            : null;
 
           card.innerHTML = `
             <div class="borrower-info">
               <h3>${borrower.name}</h3>
-              <p>Contact: ${borrower.contact || 'N/A'}</p>
               <p>Loan Amount: <span class="loan-amount">${formatCurrency(borrower.loanAmount || 0)}</span></p>
+              <p>Monthly Payment: <span class="loan-amount">${formatCurrency(borrower.monthlyPayment || 0)}</span></p>
+              <p>Remaining Balance: <span class="loan-amount">${formatCurrency(borrower.remainingBalance ?? borrower.loanAmount ?? 0)}</span></p>
+              <p>Last Payment: ${
+                lastPayment 
+                  ? formatCurrency(lastPayment.amount) + " on " + new Date(lastPayment.date).toLocaleDateString() 
+                  : "No payments yet"
+              }</p>
               <p style="font-size:0.8rem; color:#999;">Added: ${new Date(borrower.createdAt).toLocaleDateString()}</p>
             </div>
-            <div class="status ${statusClass}">
-              ${statusText}
+            <div style="margin-top:10px; display:flex; gap:10px;">
+              <button class="btn btn-primary btn-make-payment" data-id="${borrower._id}" data-monthly="${borrower.monthlyPayment}">Make Payment</button>
+              <button class="btn btn-delete" data-id="${borrower._id}">Delete</button>
             </div>
-            <button class="btn btn-delete" data-id="${borrower._id}">Delete</button>
           `;
 
           list.appendChild(card);
         });
 
-        // Attach delete event listeners
+        // Attach Make Payment events
+        document.querySelectorAll('.btn-make-payment').forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const borrowerId = e.target.getAttribute('data-id');
+            const monthlyPayment = parseFloat(e.target.getAttribute('data-monthly')) || 0;
+
+            let amount = prompt(
+              `Enter payment amount:
+
+Suggested Monthly Payment: ${formatCurrency(monthlyPayment)}
+
+(You can enter full or partial amount)`
+            );
+
+            if (!amount || isNaN(amount) || amount <= 0) {
+              alert('Invalid amount');
+              return;
+            }
+
+            try {
+              const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment: { amount: parseFloat(amount) } }),
+              });
+              if (!res.ok) throw new Error('Failed to add payment');
+              alert('Payment recorded!');
+              fetchAllBorrowers();
+              fetchAndUpdateStats();
+            } catch (err) {
+              alert('Error: ' + err.message);
+            }
+          });
+        });// Attach delete event listeners
         document.querySelectorAll('.btn-delete').forEach(button => {
           button.addEventListener('click', async (e) => {
             const borrowerId = e.target.getAttribute('data-id');
