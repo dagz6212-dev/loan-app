@@ -1078,66 +1078,27 @@
           const card = document.createElement('div');
           card.classList.add('borrower-card');
 
-          const lastPayment = (borrower.payments && borrower.payments.length > 0)
-            ? borrower.payments[borrower.payments.length - 1]
-            : null;
+          // Determine status based on loanAmount
+          const statusClass = borrower.loanAmount > 0 ? 'good' : 'warning';
+          const statusText = borrower.loanAmount > 0 ? 'Active Loan' : 'No Active Loan';
 
           card.innerHTML = `
             <div class="borrower-info">
               <h3>${borrower.name}</h3>
+              <p>Contact: ${borrower.contact || 'N/A'}</p>
               <p>Loan Amount: <span class="loan-amount">${formatCurrency(borrower.loanAmount || 0)}</span></p>
-              <p>Monthly Payment: <span class="loan-amount">${formatCurrency(borrower.monthlyPayment || 0)}</span></p>
-              <p>Remaining Balance: <span class="loan-amount">${formatCurrency(borrower.remainingBalance ?? borrower.loanAmount ?? 0)}</span></p>
-              <p>Last Payment: ${
-                lastPayment 
-                  ? formatCurrency(lastPayment.amount) + " on " + new Date(lastPayment.date).toLocaleDateString() 
-                  : "No payments yet"
-              }</p>
               <p style="font-size:0.8rem; color:#999;">Added: ${new Date(borrower.createdAt).toLocaleDateString()}</p>
             </div>
-            <div style="margin-top:10px; display:flex; gap:10px;">
-              <button class="btn btn-primary btn-make-payment" data-id="${borrower._id}" data-monthly="${borrower.monthlyPayment}">Make Payment</button>
-              <button class="btn btn-delete" data-id="${borrower._id}">Delete</button>
+            <div class="status ${statusClass}">
+              ${statusText}
             </div>
+            <button class="btn btn-delete" data-id="${borrower._id}">Delete</button>
           `;
 
           list.appendChild(card);
         });
 
-        // Attach Make Payment events
-        document.querySelectorAll('.btn-make-payment').forEach(button => {
-          button.addEventListener('click', async (e) => {
-            const borrowerId = e.target.getAttribute('data-id');
-            const monthlyPayment = parseFloat(e.target.getAttribute('data-monthly')) || 0;
-
-            let amount = prompt(
-              `Enter payment amount:
-
-Suggested Monthly Payment: ${formatCurrency(monthlyPayment)}
-
-(You can enter full or partial amount)`
-            );
-
-            if (!amount || isNaN(amount) || amount <= 0) {
-              alert('Invalid amount');
-              return;
-            }
-
-            try {
-              const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payment: { amount: parseFloat(amount) } }),
-              });
-              if (!res.ok) throw new Error('Failed to add payment');
-              alert('Payment recorded!');
-              fetchAllBorrowers();
-              fetchAndUpdateStats();
-            } catch (err) {
-              alert('Error: ' + err.message);
-            }
-          });
-        });// Attach delete event listeners
+        // Attach delete event listeners
         document.querySelectorAll('.btn-delete').forEach(button => {
           button.addEventListener('click', async (e) => {
             const borrowerId = e.target.getAttribute('data-id');
@@ -1323,5 +1284,27 @@ Suggested Monthly Payment: ${formatCurrency(monthlyPayment)}
       }
     }
   </script>
+<!-- Make Payment Modal -->
+<div id="paymentModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="paymentModalTitle">Make Payment</h2>
+      <span class="close-button" id="closePaymentModal">&times;</span>
+    </div>
+    <div>
+      <p id="paymentMonthly" style="cursor:pointer; color:#007bff; text-decoration:underline;"></p>
+      <small style="color:#555;">(Click above to autofill)</small>
+      <div class="form-group" style="margin-top:15px;">
+        <label for="paymentAmountInput">Enter Amount</label>
+        <input type="number" id="paymentAmountInput" placeholder="Enter payment amount" />
+      </div>
+      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="cancelPaymentBtn" class="btn btn-secondary">Cancel</button>
+        <button id="confirmPaymentBtn" class="btn btn-success">Confirm Payment</button>
+      </div>
+      <div id="paymentMessage" style="margin-top:15px; display:none; font-weight:600; color:#2ecc71;"></div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
