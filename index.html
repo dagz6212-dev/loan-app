@@ -1143,7 +1143,7 @@
         if (!res.ok) throw new Error('Failed to fetch borrowers');
         
         const borrowers = await res.json();
-        const activeBorrowers = borrowers.filter(b => b.loanAmount > 0);
+        const activeBorrowers = borrowers.filter(b => b.loanAmount > 0 && (b.remainingBalance ?? b.loanAmount) > 0);
         loading.style.display = 'none';
 
         if (activeBorrowers.length === 0) {
@@ -1210,7 +1210,7 @@
         today.setHours(0,0,0,0); // Normalize today's date to compare only date part
 
         const overdueBorrowers = borrowers.filter(b => {
-          if (b.loanAmount > 0 && b.nextDueDate) {
+          if (b.loanAmount > 0 && (b.remainingBalance ?? b.loanAmount) > 0 && b.nextDueDate) {
             const dueDate = new Date(b.nextDueDate);
             dueDate.setHours(0,0,0,0);
             return dueDate < today;
