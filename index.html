@@ -1097,6 +1097,7 @@
 
           list.appendChild(card);
         });
+        attachPaymentHandlers();
 
         // Attach delete event listeners
         document.querySelectorAll('.btn-delete').forEach(button => {
@@ -1184,6 +1185,7 @@
           `;
           list.appendChild(card);
         });
+        attachPaymentHandlers();
 
       } catch (err) {
         loading.style.display = 'none';
@@ -1264,6 +1266,7 @@
           `;
           list.appendChild(card);
         });
+        attachPaymentHandlers();
       } catch (err) {
         loading.style.display = 'none';
         error.style.display = 'block';
@@ -1284,27 +1287,5 @@
       }
     }
   </script>
-<!-- Make Payment Modal -->
-<div id="paymentModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 id="paymentModalTitle">Make Payment</h2>
-      <span class="close-button" id="closePaymentModal">&times;</span>
-    </div>
-    <div>
-      <p id="paymentMonthly" style="cursor:pointer; color:#007bff; text-decoration:underline;"></p>
-      <small style="color:#555;">(Click above to autofill)</small>
-      <div class="form-group" style="margin-top:15px;">
-        <label for="paymentAmountInput">Enter Amount</label>
-        <input type="number" id="paymentAmountInput" placeholder="Enter payment amount" />
-      </div>
-      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
-        <button id="cancelPaymentBtn" class="btn btn-secondary">Cancel</button>
-        <button id="confirmPaymentBtn" class="btn btn-success">Confirm Payment</button>
-      </div>
-      <div id="paymentMessage" style="margin-top:15px; display:none; font-weight:600; color:#2ecc71;"></div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
