@@ -30,7 +30,6 @@ module.exports = async (req, res) => {
     const collection = db.collection("borrowers");
 
     if (req.method === "GET") {
-      // Return all borrowers sorted by latest first
       const borrowers = await collection.find({}).sort({ createdAt: -1 }).toArray();
       return res.status(200).json(borrowers);
     }
@@ -38,7 +37,6 @@ module.exports = async (req, res) => {
     if (req.method === "POST") {
       const body = req.body;
 
-      // Validate required fields
       if (!body.name || !body.contact || !body.address) {
         return res.status(400).json({ message: "Missing required borrower fields." });
       }
@@ -54,10 +52,47 @@ module.exports = async (req, res) => {
         nextDueDate: body.nextDueDate ? new Date(body.nextDueDate) : null,
         monthlyPayment: Number(body.monthlyPayment) || 0,
         createdAt: new Date(),
+        payments: [],
+        remainingBalance: Number(body.loanAmount) || 0, // 👈 track balance
       };
 
       const result = await collection.insertOne(borrower);
       return res.status(201).json({ _id: result.insertedId, ...borrower });
+    }
+
+    if (req.method === "PUT") {
+      const { id } = req.query;
+      const body = req.body;
+
+      if (!id) {
+        return res.status(400).json({ message: "Missing borrower id." });
+      }
+
+      if (body.payment) {
+        const paymentRecord = {
+          amount: Number(body.payment.amount) || 0,
+          date: body.payment.date ? new Date(body.payment.date) : new Date(),
+          note: body.payment.note || "",
+        };
+
+        const borrower = await collection.findOne({ _id: new ObjectId(id) });
+        if (!borrower) return res.status(404).json({ message: "Borrower not found." });
+
+        const newBalance = Math.max(
+          (borrower.remainingBalance ?? borrower.loanAmount) - paymentRecord.amount,
+          0
+        );
+
+        await collection.updateOne(
+          { _id: new ObjectId(id) },
+          {
+            $push: { payments: paymentRecord },
+            $set: { remainingBalance: newBalance },
+          }
+        );
+
+        return res.status(200).json({ message: "Payment added successfully.", remainingBalance: newBalance });
+      }
     }
 
     if (req.method === "DELETE") {
@@ -76,7 +111,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ message: "Borrower deleted successfully." });
     }
 
-    res.setHeader("Allow", ["GET", "POST", "DELETE"]);
+    res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
     return res.status(405).json({ message: `Method ${req.method} Not Allowed` });
   } catch (err) {
     console.error("API error:", err);
