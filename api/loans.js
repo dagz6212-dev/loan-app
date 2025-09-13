@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
         monthlyPayment: Number(body.monthlyPayment) || 0,
         createdAt: new Date(),
         payments: [],
-        remainingBalance: Number(body.loanAmount) || 0, // 👈 track balance
+        remainingBalance: Number(body.loanAmount) || 0,
       };
 
       const result = await collection.insertOne(borrower);
