@@ -1085,8 +1085,8 @@
           card.innerHTML = `
             <div class="borrower-info">
               <h3>${borrower.name}</h3>
+              <p>Contact: ${borrower.contact || 'N/A'}</p>
               <p>Loan Amount: <span class="loan-amount">${formatCurrency(borrower.loanAmount || 0)}</span></p>
-              <p>Monthly Payment: <span class="loan-amount">${formatCurrency(borrower.monthlyPayment || 0)}</span></p>
               <p>Remaining Balance: <span class="loan-amount">${formatCurrency(borrower.remainingBalance ?? borrower.loanAmount ?? 0)}</span></p>
               <p>Last Payment: ${
                 lastPayment 
@@ -1095,10 +1095,8 @@
               }</p>
               <p style="font-size:0.8rem; color:#999;">Added: ${new Date(borrower.createdAt).toLocaleDateString()}</p>
             </div>
-            <div style="margin-top:10px; display:flex; gap:10px;">
-              <button class="btn btn-primary btn-make-payment" data-id="${borrower._id}" data-monthly="${borrower.monthlyPayment}">Make Payment</button>
-              <button class="btn btn-delete" data-id="${borrower._id}">Delete</button>
-            </div>
+            <button class="btn btn-primary btn-make-payment" data-id="${borrower._id}">Make Payment</button>
+            <button class="btn btn-delete" data-id="${borrower._id}">Delete</button>
           `;
 
           list.appendChild(card);
@@ -1108,16 +1106,7 @@
         document.querySelectorAll('.btn-make-payment').forEach(button => {
           button.addEventListener('click', async (e) => {
             const borrowerId = e.target.getAttribute('data-id');
-            const monthlyPayment = parseFloat(e.target.getAttribute('data-monthly')) || 0;
-
-            let amount = prompt(
-              `Enter payment amount:
-
-Suggested Monthly Payment: ${formatCurrency(monthlyPayment)}
-
-(You can enter full or partial amount)`
-            );
-
+            const amount = prompt('Enter payment amount:');
             if (!amount || isNaN(amount) || amount <= 0) {
               alert('Invalid amount');
               return;
