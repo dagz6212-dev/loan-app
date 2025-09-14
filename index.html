@@ -770,7 +770,53 @@
         <div id="addBorrowerError" class="error-message" style="display: none; margin-top: 15px;"></div>
       </form>
     </div>
+  
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Make Payment</h2>
+        <span class="close-button" id="closePaymentModal">&times;</span>
+      </div>
+      
+      <form id="paymentForm">
+        <input type="hidden" id="paymentBorrowerId" />
+
+        <div class="form-group">
+          <label for="paymentAmount">Payment Amount (Php) *</label>
+          <input type="number" id="paymentAmount" required min="1" placeholder="Enter amount" />
+        </div>
+
+        <div class="form-group">
+          <label for="paymentNote">Note (optional)</label>
+          <input type="text" id="paymentNote" placeholder="Enter note (e.g. cash, GCash, etc.)" />
+        </div>
+
+        <div class="form-actions" style="display:flex; justify-content: flex-end; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" id="cancelPayment">Cancel</button>
+          <button type="submit" class="btn btn-success" style="margin-left: 10px;">Submit Payment</button>
+        </div>
+
+        <div id="paymentError" class="error-message" style="display:none; margin-top: 10px;"></div>
+      </form>
+    </div>
   </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Confirmation</h2>
+        <span class="close-button" id="closeConfirmationModal">&times;</span>
+      </div>
+      <div id="confirmationMessage" style="margin:20px 0; color:#333;"></div>
+      <div style="text-align:right;">
+        <button id="okConfirmation" class="btn btn-success">OK</button>
+      </div>
+    </div>
+  </div>
+
+</div>
 
   <script>
     const API_URL = "/api"; // now points to your Vercel API
@@ -841,6 +887,26 @@
 
     // Report button
     const generateReportBtn = document.getElementById('generateReportBtn');
+
+    // Confirmation modal elements
+    const confirmationModal = document.getElementById('confirmationModal');
+    const confirmationMessage = document.getElementById('confirmationMessage');
+    const closeConfirmationModal = document.getElementById('closeConfirmationModal');
+    const okConfirmation = document.getElementById('okConfirmation');
+
+    function showConfirmation(message) {
+      confirmationMessage.textContent = message;
+      confirmationModal.style.display = 'flex';
+    }
+    function closeConfirmation() {
+      confirmationModal.style.display = 'none';
+    }
+    closeConfirmationModal.addEventListener('click', closeConfirmation);
+    okConfirmation.addEventListener('click', closeConfirmation);
+    window.addEventListener('click', (e) => {
+      if (e.target === confirmationModal) closeConfirmation();
+    });
+
 
     // Format currency helper: Php prefix, comma thousands separator, no decimals
     function formatCurrency(amount) {
@@ -992,7 +1058,7 @@
         // Success: close modal and update stats
         addBorrowerModal.style.display = 'none';
         addBorrowerForm.reset();
-        alert('Borrower added successfully!');
+        showConfirmation('Borrower added successfully!');
         fetchAndUpdateStats();
         fetchAndUpdateLoansData();
 
@@ -1014,10 +1080,10 @@
         const borrowers = await res.json();
         const totalAmount = borrowers.reduce((sum, b) => sum + (b.loanAmount || 0), 0);
         
-        alert(`Sample Report Generated!\n\nTotal Borrowers: ${borrowers.length}\nTotal Loan Amount: ${formatCurrency(totalAmount)}\n\nReport functionality will be expanded soon.`);
+        showConfirmation(`Sample Report Generated!\n\nTotal Borrowers: ${borrowers.length}\nTotal Loan Amount: ${formatCurrency(totalAmount)}\n\nReport functionality will be expanded soon.`);
         
       } catch (err) {
-        alert('Failed to generate report: ' + err.message);
+        showConfirmation('Failed to generate report: ' + err.message);
       } finally {
         generateReportBtn.textContent = 'Generate Sample Report';
         generateReportBtn.disabled = false;
@@ -1103,24 +1169,11 @@
         });
 
         // Attach Make Payment events
-        
-document.querySelectorAll('.btn-make-payment').forEach(button => {
-  button.addEventListener('click', (e) => {
-    const borrowerId = e.target.getAttribute('data-id');
-    const borrowerCard = e.target.closest('.borrower-card');
-    const borrowerName = borrowerCard.querySelector('h3').textContent;
-    const monthlyPaymentText = borrowerCard.querySelector('.loan-amount').textContent.replace(/[^\d]/g, '');
-    const monthlyPayment = parseInt(monthlyPaymentText) || 0;
-
-    document.getElementById('paymentBorrowerName').value = borrowerName;
-    document.getElementById('paymentMonthly').value = monthlyPayment;
-    document.getElementById('paymentAmount').value = monthlyPayment;
-    document.getElementById('paymentForm').setAttribute('data-id', borrowerId);
-
-    document.getElementById('paymentModal').style.display = 'flex';
-  });
-});
-
+        document.querySelectorAll('.btn-make-payment').forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const borrowerId = e.target.getAttribute('data-id');
+            openPaymentModal(borrowerId);
+          });
         });// Attach delete event listeners
         document.querySelectorAll('.btn-delete').forEach(button => {
           button.addEventListener('click', async (e) => {
@@ -1134,11 +1187,11 @@ document.querySelectorAll('.btn-make-payment').forEach(button => {
                   const errorData = await res.json().catch(()=>({message:'Unknown error'}));
                   throw new Error(errorData.message || 'Failed to delete borrower');
                 }
-                alert('Borrower deleted successfully.');
+                showConfirmation('Borrower deleted successfully.');
                 fetchAllBorrowers(); // Refresh the list
                 fetchAndUpdateStats(); // Update stats on Home page
               } catch (err) {
-                alert('Error deleting borrower: ' + err.message);
+                showConfirmation('Error deleting borrower: ' + err.message);
               }
             }
           });
@@ -1306,194 +1359,6 @@ document.querySelectorAll('.btn-make-payment').forEach(button => {
         fetchOverdueLoans();
       }
     }
-  
-    
-    paymentForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const borrowerId = paymentForm.getAttribute('data-id');
-      const amount = parseFloat(document.getElementById('paymentAmount').value);
-
-      if (!amount || amount <= 0) {
-        alert('Please enter a valid amount.');
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment: { amount } }),
-        });
-        if (!res.ok) throw new Error('Failed to add payment');
-
-        alert('Payment recorded!');
-        paymentModal.style.display = 'none';
-        fetchAllBorrowers();
-        fetchAndUpdateStats();
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    });
-
-
-    const paymentModal = document.getElementById('paymentModal');
-    const closePaymentModal = document.getElementById('closePaymentModal');
-    const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
-    const paymentForm = document.getElementById('paymentForm');
-
-    // Success message placeholder
-    const successMessage = document.createElement('div');
-    successMessage.style.display = 'none';
-    successMessage.style.textAlign = 'center';
-    successMessage.style.marginTop = '15px';
-    successMessage.style.fontWeight = '600';
-    successMessage.style.color = '#2ecc71';
-    paymentForm.appendChild(successMessage);
-
-    // Close modal function
-    function hidePaymentModal() {
-      paymentModal.style.display = 'none';
-      successMessage.style.display = 'none';
-      successMessage.textContent = '';
-      paymentForm.reset();
-    }
-
-    closePaymentModal.addEventListener('click', hidePaymentModal);
-    cancelPaymentBtn.addEventListener('click', hidePaymentModal);
-    window.addEventListener('click', (e) => {
-      if (e.target === paymentModal) hidePaymentModal();
-    });
-
-    // Handle payment form submit
-    paymentForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const borrowerId = paymentForm.getAttribute('data-id');
-      const amount = parseFloat(document.getElementById('paymentAmount').value);
-
-      if (!amount || amount <= 0) {
-        alert('Please enter a valid amount.');
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment: { amount } }),
-        });
-        if (!res.ok) throw new Error('Failed to add payment');
-
-        // Show success inline
-        successMessage.textContent = '✅ Payment successful!';
-        successMessage.style.display = 'block';
-
-        // Refresh data
-        fetchAllBorrowers();
-        fetchAndUpdateStats();
-
-        // Auto-close modal after 1.5s
-        setTimeout(hidePaymentModal, 1500);
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    });
-
-
-    const paymentModal = document.getElementById('paymentModal');
-    const closePaymentModal = document.getElementById('closePaymentModal');
-    const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
-    const paymentForm = document.getElementById('paymentForm');
-
-    // Success message placeholder
-    const successMessage = document.createElement('div');
-    successMessage.style.display = 'none';
-    successMessage.style.textAlign = 'center';
-    successMessage.style.marginTop = '15px';
-    successMessage.style.fontWeight = '600';
-    successMessage.style.color = '#2ecc71';
-    paymentForm.appendChild(successMessage);
-
-    // Close modal function
-    function hidePaymentModal() {
-      paymentModal.style.display = 'none';
-      successMessage.style.display = 'none';
-      successMessage.textContent = '';
-      paymentForm.reset();
-    }
-
-    closePaymentModal.addEventListener('click', hidePaymentModal);
-    cancelPaymentBtn.addEventListener('click', hidePaymentModal);
-    window.addEventListener('click', (e) => {
-      if (e.target === paymentModal) hidePaymentModal();
-    });
-
-    // Handle payment form submit
-    paymentForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const borrowerId = paymentForm.getAttribute('data-id');
-      const amount = parseFloat(document.getElementById('paymentAmount').value);
-
-      if (!amount || amount <= 0) {
-        alert('Please enter a valid amount.');
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment: { amount } }),
-        });
-        if (!res.ok) throw new Error('Failed to add payment');
-
-        // Show success inline
-        successMessage.textContent = '✅ Payment successful!';
-        successMessage.style.display = 'block';
-
-        // Refresh data
-        fetchAllBorrowers();
-        fetchAndUpdateStats();
-
-        // Auto-close modal after 1.5s
-        setTimeout(hidePaymentModal, 1500);
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    });
-
-</script>
-
-  <!-- Payment Modal -->
-  <div id="paymentModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Make Payment</h2>
-        <span class="close-button" id="closePaymentModal">&times;</span>
-      </div>
-
-      <form id="paymentForm">
-        <div class="form-group">
-          <label>Borrower</label>
-          <input type="text" id="paymentBorrowerName" disabled />
-        </div>
-
-        <div class="form-group">
-          <label>Monthly Payment</label>
-          <input type="number" id="paymentMonthly" readonly />
-        </div>
-
-        <div class="form-group">
-          <label>Enter Amount *</label>
-          <input type="number" id="paymentAmount" required min="1" />
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-          <button type="button" class="btn btn-secondary" id="cancelPaymentBtn">Cancel</button>
-          <button type="submit" class="btn btn-success">Confirm Payment</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
+  </script>
 </body>
 </html>
