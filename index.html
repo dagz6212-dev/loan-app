@@ -1304,17 +1304,7 @@
       }
     }
   
-    const paymentModal = document.getElementById('paymentModal');
-    const closePaymentModal = document.getElementById('closePaymentModal');
-    const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
-    const paymentForm = document.getElementById('paymentForm');
-
-    closePaymentModal.addEventListener('click', () => paymentModal.style.display = 'none');
-    cancelPaymentBtn.addEventListener('click', () => paymentModal.style.display = 'none');
-    window.addEventListener('click', (e) => {
-      if (e.target === paymentModal) paymentModal.style.display = 'none';
-    });
-
+    
     paymentForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const borrowerId = paymentForm.getAttribute('data-id');
@@ -1337,6 +1327,69 @@
         paymentModal.style.display = 'none';
         fetchAllBorrowers();
         fetchAndUpdateStats();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+
+    const paymentModal = document.getElementById('paymentModal');
+    const closePaymentModal = document.getElementById('closePaymentModal');
+    const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+    const paymentForm = document.getElementById('paymentForm');
+
+    // Success message placeholder
+    const successMessage = document.createElement('div');
+    successMessage.style.display = 'none';
+    successMessage.style.textAlign = 'center';
+    successMessage.style.marginTop = '15px';
+    successMessage.style.fontWeight = '600';
+    successMessage.style.color = '#2ecc71';
+    paymentForm.appendChild(successMessage);
+
+    // Close modal function
+    function hidePaymentModal() {
+      paymentModal.style.display = 'none';
+      successMessage.style.display = 'none';
+      successMessage.textContent = '';
+      paymentForm.reset();
+    }
+
+    closePaymentModal.addEventListener('click', hidePaymentModal);
+    cancelPaymentBtn.addEventListener('click', hidePaymentModal);
+    window.addEventListener('click', (e) => {
+      if (e.target === paymentModal) hidePaymentModal();
+    });
+
+    // Handle payment form submit
+    paymentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const borrowerId = paymentForm.getAttribute('data-id');
+      const amount = parseFloat(document.getElementById('paymentAmount').value);
+
+      if (!amount || amount <= 0) {
+        alert('Please enter a valid amount.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment: { amount } }),
+        });
+        if (!res.ok) throw new Error('Failed to add payment');
+
+        // Show success inline
+        successMessage.textContent = '✅ Payment successful!';
+        successMessage.style.display = 'block';
+
+        // Refresh data
+        fetchAllBorrowers();
+        fetchAndUpdateStats();
+
+        // Auto-close modal after 1.5s
+        setTimeout(hidePaymentModal, 1500);
       } catch (err) {
         alert('Error: ' + err.message);
       }
