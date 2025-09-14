@@ -1168,13 +1168,16 @@
           list.appendChild(card);
         });
 
+        
         // Attach Make Payment events
         document.querySelectorAll('.btn-make-payment').forEach(button => {
-          button.addEventListener('click', async (e) => {
+          button.addEventListener('click', (e) => {
             const borrowerId = e.target.getAttribute('data-id');
-            openPaymentModal(borrowerId);
+            openPaymentModal(borrowerId); // ✅ open modal
           });
-        });// Attach delete event listeners
+        });
+
+        // Attach delete event listeners
         document.querySelectorAll('.btn-delete').forEach(button => {
           button.addEventListener('click', async (e) => {
             const borrowerId = e.target.getAttribute('data-id');
