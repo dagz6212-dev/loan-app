@@ -1106,25 +1106,17 @@
         document.querySelectorAll('.btn-make-payment').forEach(button => {
           button.addEventListener('click', async (e) => {
             const borrowerId = e.target.getAttribute('data-id');
-            const amount = prompt('Enter payment amount:');
-            if (!amount || isNaN(amount) || amount <= 0) {
-              alert('Invalid amount');
-              return;
-            }
+            const borrowerCard = e.target.closest('.borrower-card');
+            const borrowerName = borrowerCard.querySelector('h3').textContent;
+            const monthlyPaymentText = borrowerCard.querySelector('.loan-amount').textContent.replace(/[^\d]/g, '');
+            const monthlyPayment = parseInt(monthlyPaymentText) || 0;
 
-            try {
-              const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payment: { amount: parseFloat(amount) } }),
-              });
-              if (!res.ok) throw new Error('Failed to add payment');
-              alert('Payment recorded!');
-              fetchAllBorrowers();
-              fetchAndUpdateStats();
-            } catch (err) {
-              alert('Error: ' + err.message);
-            }
+            document.getElementById('paymentBorrowerName').value = borrowerName;
+            document.getElementById('paymentMonthly').value = monthlyPayment;
+            document.getElementById('paymentAmount').value = monthlyPayment;
+            document.getElementById('paymentForm').setAttribute('data-id', borrowerId);
+
+            document.getElementById('paymentModal').style.display = 'flex';
           });
         });// Attach delete event listeners
         document.querySelectorAll('.btn-delete').forEach(button => {
@@ -1311,6 +1303,78 @@
         fetchOverdueLoans();
       }
     }
-  </script>
+  
+    const paymentModal = document.getElementById('paymentModal');
+    const closePaymentModal = document.getElementById('closePaymentModal');
+    const cancelPaymentBtn = document.getElementById('cancelPaymentBtn');
+    const paymentForm = document.getElementById('paymentForm');
+
+    closePaymentModal.addEventListener('click', () => paymentModal.style.display = 'none');
+    cancelPaymentBtn.addEventListener('click', () => paymentModal.style.display = 'none');
+    window.addEventListener('click', (e) => {
+      if (e.target === paymentModal) paymentModal.style.display = 'none';
+    });
+
+    paymentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const borrowerId = paymentForm.getAttribute('data-id');
+      const amount = parseFloat(document.getElementById('paymentAmount').value);
+
+      if (!amount || amount <= 0) {
+        alert('Please enter a valid amount.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment: { amount } }),
+        });
+        if (!res.ok) throw new Error('Failed to add payment');
+
+        alert('Payment recorded!');
+        paymentModal.style.display = 'none';
+        fetchAllBorrowers();
+        fetchAndUpdateStats();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+
+</script>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Make Payment</h2>
+        <span class="close-button" id="closePaymentModal">&times;</span>
+      </div>
+
+      <form id="paymentForm">
+        <div class="form-group">
+          <label>Borrower</label>
+          <input type="text" id="paymentBorrowerName" disabled />
+        </div>
+
+        <div class="form-group">
+          <label>Monthly Payment</label>
+          <input type="number" id="paymentMonthly" readonly />
+        </div>
+
+        <div class="form-group">
+          <label>Enter Amount *</label>
+          <input type="number" id="paymentAmount" required min="1" />
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button type="button" class="btn btn-secondary" id="cancelPaymentBtn">Cancel</button>
+          <button type="submit" class="btn btn-success">Confirm Payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>
