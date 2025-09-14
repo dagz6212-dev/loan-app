@@ -1169,15 +1169,38 @@
         });
 
         
-        // Attach Make Payment events
+        
+        // Attach Make Payment events (after rendering borrower cards)
         document.querySelectorAll('.btn-make-payment').forEach(button => {
           button.addEventListener('click', (e) => {
             const borrowerId = e.target.getAttribute('data-id');
-            openPaymentModal(borrowerId); // ✅ open modal
+            openPaymentModal(borrowerId); // opens the modal ✅
           });
         });
 
         // Attach delete event listeners
+        document.querySelectorAll('.btn-delete').forEach(button => {
+          button.addEventListener('click', async (e) => {
+            const borrowerId = e.target.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this borrower? This action cannot be undone.')) {
+              try {
+                const res = await fetch(`${API_URL}/loans?id=${borrowerId}`, {
+                  method: 'DELETE',
+                });
+                if (!res.ok) {
+                  const errorData = await res.json().catch(()=>({message:'Unknown error'}));
+                  throw new Error(errorData.message || 'Failed to delete borrower');
+                }
+                showConfirmation('Borrower deleted successfully.');
+                fetchAllBorrowers(); // Refresh list
+                fetchAndUpdateStats(); // Update stats
+              } catch (err) {
+                showConfirmation('Error deleting borrower: ' + err.message);
+              }
+            }
+          });
+        });
+
         document.querySelectorAll('.btn-delete').forEach(button => {
           button.addEventListener('click', async (e) => {
             const borrowerId = e.target.getAttribute('data-id');
