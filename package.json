@@ -15,7 +15,7 @@
     "mongodb": "^5.9.2"
   },
   "engines": {
-    "node": ">=18.x"
+    "node": "18.x"
   },
   "keywords": ["loan", "management", "mongodb", "express", "finance"],
   "author": "Your Name",
